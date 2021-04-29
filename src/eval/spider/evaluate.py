@@ -165,6 +165,9 @@ def F1(acc, rec):
 
 
 def get_scores(count, pred_total, label_total):
+    prec = count / pred_total if pred_total else 0
+    rec = count / label_total if label_total else 0
+    return prec, rec, F1(prec, rec) 
     if pred_total != label_total:
         return 0,0,0
     elif count == pred_total:
@@ -626,8 +629,8 @@ def evaluate_single_query_with_multiple_ground_truths(p, g_list, hardness=None, 
                                         in_execution_order=in_execution_order,
                                         verbose=verbose)[0]
         if results['exact'] == 1:
-            return True, results['hardness'], results['table_err']
-    return False, results['hardness'], results['table_err']
+            return (True, results['hardness'], results['table_err']), results
+    return (False, results['hardness'], results['table_err']), results
 
 
 def evaluate_single_query(p, g, hardness=None, evaluator=None, scores=None, in_execution_order=False, verbose=False):
@@ -667,7 +670,8 @@ def evaluate_single_query(p, g, hardness=None, evaluator=None, scores=None, in_e
     p_valid_col_units = build_valid_col_units(p_sql['from']['table_units'], schema)
     p_sql = rebuild_sql_val(p_sql)
     p_sql = rebuild_sql_col(p_valid_col_units, p_sql, kmap)
-
+    
+    etype = "all"
     if etype in ["all", "exec"]:
         exec_score = eval_exec_match(db, p_str, g_str, p_sql, g_sql)
         if scores and exec_score:
@@ -704,6 +708,7 @@ def evaluate_single_query(p, g, hardness=None, evaluator=None, scores=None, in_e
                 'predictSQL': p_str,
                 'goldSQL': g_str,
                 'hardness': hardness,
+                'exec': exec_score,
                 'exact': exact_score,
                 'partial': partial_scores,
                 'table_err': len(p_tables) - len(g_tables)

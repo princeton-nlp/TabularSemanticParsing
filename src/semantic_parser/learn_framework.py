@@ -164,7 +164,7 @@ class EncoderDecoderLFramework(LFramework):
                 p_pointers = None
             else:
                 raise NotImplementedError
-
+            
             pred_list.append(preds)
             pred_score_list.append(pred_scores)
             if decode_str_output or verbose:
@@ -246,13 +246,17 @@ class EncoderDecoderLFramework(LFramework):
                                 if self.save_vis:
                                     self.save_vis_parameters(post_processed_output, text_ptr_weights_vis, pointer_vis)
                                 if inline_eval:
-                                    results = eval_tools.eval_prediction(
+                                    ___ = eval_tools.eval_prediction(
                                         pred=pred_sql,
                                         gt_list=gt_program_list,
                                         dataset_id=example.dataset_id,
                                         db_name=example.db_name,
                                         in_execution_order=(self.args.process_sql_in_execution_order and
                                                             not restore_clause_order))
+                                    try:
+                                        results, _ = ___
+                                    except:
+                                        import pdb; pdb.set_trace()
                                     correct, _, _ = results
                                     exp_correct.append(correct)
                                     correct_ = correct[1] if isinstance(correct, tuple) else correct

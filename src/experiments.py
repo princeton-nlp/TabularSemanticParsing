@@ -120,6 +120,9 @@ def inference(sp):
                             pred_restored_cache=pred_restored_cache,
                             check_schema_consistency_=args.sql_consistency_check,
                             engine=engine, inline_eval=True, verbose=True)
+
+    json.dump(out_dict['pred_decoded'], open('pred_decoded.json', 'w'))
+    json.dump(out_dict['pred_decoded_scores'], open('pred_decoded_scores.json', 'w'))
     if args.process_sql_in_execution_order:
         new_pred_restored_cache_size = sum(len(v) for v in out_dict['pred_restored_cache'].values())
         newly_cached_size = new_pred_restored_cache_size - pred_restored_cache_size

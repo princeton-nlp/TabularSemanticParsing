@@ -253,21 +253,23 @@ def get_exact_match_metrics(examples, pred_list, in_execution_order=False, engin
     num_top_1_c, num_top_2_c, num_top_3_c, num_top_5_c, num_top_10_c = 0, 0, 0, 0, 0
     num_ex_top_1_c, num_ex_top_2_c, num_ex_top_3_c, num_ex_top_5_c, num_ex_top_10_c = 0, 0, 0, 0, 0
     table_errs = []
-
+    
+    res = []
     for i, example in enumerate(examples):
+        if example.dataset_id == SPIDER:
+            gt_program_list = example.program_list
+        elif example.dataset_id == WIKISQL:
+            gt_program_list = example.program_ast_list_
+        else:
+            gt_program_list = example.gt_program_list
+        res.append({'g': gt_program_list, 'p': []})
         top_k_preds = pred_list[i]
         em_recorded, ex_recorded = False, False
         for j, pred in enumerate(top_k_preds):
-            if example.dataset_id == SPIDER:
-                gt_program_list = example.program_list
-            elif example.dataset_id == WIKISQL:
-                gt_program_list = example.program_ast_list_
-            else:
-                gt_program_list = example.gt_program_list
-
-            results = eval_prediction(pred, gt_program_list, example.dataset_id,
+            results, full_results = eval_prediction(pred, gt_program_list, example.dataset_id,
                                       db_name=example.db_name, in_execution_order=in_execution_order,
                                       engine=engine)
+            res[-1]['p'].append({'prog': pred, 'full_results': full_results}) 
             if j == 0:
                 table_errs.append(results[-1])
 
@@ -318,8 +320,10 @@ def get_exact_match_metrics(examples, pred_list, in_execution_order=False, engin
                         num_top_5_c += 1
                     if j < 10:
                         num_top_10_c += 1
-                    break
-
+                    # break
+    
+    import json
+    json.dump(res, open("res.json", 'w'), indent=2)
     metrics = dict()
     metrics['top_1_em'] = float(num_top_1_c) / len(examples)
     metrics['top_2_em'] = float(num_top_2_c) / len(examples)
@@ -346,7 +350,7 @@ def eval_prediction(pred, gt_list, dataset_id, db_name=None, in_execution_order=
                 pred, [(gt, db_name) for gt in gt_list], in_execution_order=in_execution_order)
         except Exception as e:
             print(str(e))
-            return False, 'easy', 0
+            return (False, 'easy', 0), 0
     elif dataset_id == WIKISQL:
         assert(len(gt_list) == 1)
         gt = {'sql': gt_list[0], 'table_id': db_name}
