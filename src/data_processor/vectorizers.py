@@ -34,7 +34,8 @@ def vectorize_singleton(tokens, token_types, vocab):
             ids.append(vocab.to_idx(x))
         else:
             raise NotImplementedError
-        assert(ids[-1] != vocab.unk_id)
+        if (ids[-1] == vocab.unk_id):
+            print('error', tokens)
     return ids
 
 
