@@ -215,6 +215,11 @@ def beam_search(alpha, model, decoder, decoder_embeddings, num_steps, beam_size,
                         # *
                         m_field_masks.scatter_(index=constant_seq_len.unsqueeze(1),
                                                src=ops.int_ones_var_cuda([batch_size*beam_size, 1]), dim=1)
+                        if m_field_masks.size(1) <= db_scope_update_idx.max():
+                            print(f'beam search wrong! {m_field_masks.size(1)}, {db_scope_update_idx.max()}')
+                            db_scope_update_idx = torch.minimum(db_scope_update_idx, torch.tensor(m_field_masks.size(1) - 1))
+                            # print(f'beam search wrong! {m_field_masks.size(1)}, {db_scope_update_idx.max()}')
+                            assert m_field_masks.size(1) > db_scope_update_idx.max()
                         m_field_masks.scatter_add_(index=db_scope_update_idx, src=db_scope_update_mask.long(), dim=1)
                         m_field_masks = (m_field_masks > 0).long()
                     # Heuristics:
